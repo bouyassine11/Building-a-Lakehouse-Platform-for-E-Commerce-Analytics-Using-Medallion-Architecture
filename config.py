@@ -13,32 +13,32 @@ SOURCE_CONFIG = {
     "customers": {
         "file": "customers.csv",
         "format": "csv",
-        "row_count": 50_000,
+        "row_count": 10_000,
     },
     "products": {
         "file": "products.csv",
         "format": "csv",
-        "row_count": 5_000,
+        "row_count": 1_000,
     },
     "orders": {
         "file": "orders.csv",
         "format": "csv",
-        "row_count": 500_000,
+        "row_count": 50_000,
     },
     "payments": {
         "file": "payments.csv",
         "format": "csv",
-        "row_count": 500_000,
+        "row_count": 50_000,
     },
     "deliveries": {
         "file": "deliveries.csv",
         "format": "csv",
-        "row_count": 500_000,
+        "row_count": 50_000,
     },
     "web_events": {
         "file": "web_events.json",
         "format": "json",
-        "row_count": 200_000,
+        "row_count": 20_000,
     },
 }
 
