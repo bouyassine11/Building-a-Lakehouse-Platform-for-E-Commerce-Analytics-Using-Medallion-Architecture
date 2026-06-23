@@ -8,8 +8,7 @@ from faker import Faker
 from config import RAW_DATA_DIR
 
 fake = Faker()
-Faker.seed(42)
-random.seed(42)
+random.seed()
 
 DATE_FORMATS = [
     lambda d: d.strftime("%Y-%m-%d"),

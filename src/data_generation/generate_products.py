@@ -8,8 +8,7 @@ from faker import Faker
 from config import RAW_DATA_DIR
 
 fake = Faker()
-Faker.seed(42)
-random.seed(42)
+random.seed()
 
 CATEGORIES = {
     "Electronics": ["Smartphones", "Laptops", "Accessories", "Audio", "Cameras"],

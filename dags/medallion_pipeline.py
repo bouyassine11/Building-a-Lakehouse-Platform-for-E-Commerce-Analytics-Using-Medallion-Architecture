@@ -53,7 +53,7 @@ with DAG(
     dag_id="medallion_pipeline",
     default_args=DEFAULT_ARGS,
     description="End-to-end medallion architecture ETL pipeline",
-    schedule="0 2 * * *",
+    schedule=None,
     start_date=datetime(2026, 1, 1),
     catchup=False,
     tags=["medallion", "bronze", "silver", "gold"],

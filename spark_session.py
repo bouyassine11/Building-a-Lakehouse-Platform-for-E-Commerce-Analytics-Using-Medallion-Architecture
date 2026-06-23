@@ -18,7 +18,7 @@ def get_spark_session(app_name: str = "LakehouseETL") -> SparkSession:
                 break
     return (
         SparkSession.builder.appName(app_name)
-        .master("local[*]")
+        .master("local[1]")
         .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
         .config(
             "spark.sql.catalog.spark_catalog",
@@ -33,5 +33,6 @@ def get_spark_session(app_name: str = "LakehouseETL") -> SparkSession:
         .config("spark.databricks.delta.schema.autoMerge.enabled", "true")
         .config("spark.databricks.delta.retentionDurationCheck.enabled", "false")
         .config("spark.driver.host", "127.0.0.1")
+        .config("spark.sql.shuffle.partitions", "50")
         .getOrCreate()
     )

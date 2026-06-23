@@ -7,8 +7,7 @@ from faker import Faker
 from config import RAW_DATA_DIR
 
 fake = Faker()
-Faker.seed(42)
-random.seed(42)
+random.seed()
 
 PAYMENT_METHODS = ["Credit Card", "PayPal", "Debit Card", "Bank Transfer", "Gift Card"]
 PAYMENT_STATUSES = ["Completed", "Pending", "Failed", "Refunded"]

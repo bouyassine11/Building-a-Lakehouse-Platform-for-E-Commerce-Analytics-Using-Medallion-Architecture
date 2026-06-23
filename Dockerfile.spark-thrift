@@ -1,0 +1,17 @@
+FROM apache/spark:3.5.1
+
+USER root
+
+# Download Delta Lake JARs and add them to the Spark classpath
+RUN wget -q -O /opt/spark/jars/delta-spark_2.12-3.1.0.jar \
+      https://repo1.maven.org/maven2/io/delta/delta-spark_2.12/3.1.0/delta-spark_2.12-3.1.0.jar && \
+    wget -q -O /opt/spark/jars/delta-storage-3.1.0.jar \
+      https://repo1.maven.org/maven2/io/delta/delta-storage/3.1.0/delta-storage-3.1.0.jar && \
+    chmod 644 /opt/spark/jars/delta-*.jar
+
+COPY scripts/start-thrift.sh /opt/spark/start-thrift.sh
+RUN chmod +x /opt/spark/start-thrift.sh
+
+EXPOSE 10000
+
+ENTRYPOINT ["/opt/spark/start-thrift.sh"]

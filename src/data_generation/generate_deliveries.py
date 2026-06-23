@@ -7,8 +7,7 @@ from faker import Faker
 from config import RAW_DATA_DIR
 
 fake = Faker()
-Faker.seed(42)
-random.seed(42)
+random.seed()
 
 CARRIERS = ["FedEx", "UPS", "USPS", "DHL", "Amazon Logistics"]
 DELIVERY_STATUSES = ["Shipped", "In Transit", "Delivered", "Returned", "Lost"]

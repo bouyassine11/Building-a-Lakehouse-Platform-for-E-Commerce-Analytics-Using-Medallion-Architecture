@@ -1,4 +1,10 @@
-version: "3.8"
+x-volumes: &app-volumes
+  - ./dags:/opt/airflow/dags
+  - ./src:/opt/airflow/src
+  - ./data:/opt/airflow/data
+  - ./requirements.txt:/opt/airflow/requirements.txt
+  - ./config.py:/opt/airflow/config.py
+  - ./spark_session.py:/opt/airflow/spark_session.py
 
 x-airflow-common: &airflow-common
   build: .
@@ -8,6 +14,9 @@ x-airflow-common: &airflow-common
     AIRFLOW__CORE__LOAD_EXAMPLES: "false"
     AIRFLOW__CORE__FERNET_KEY: ""
     AIRFLOW__LOGGING__LOGGING_LEVEL: INFO
+    AIRFLOW__WEBSERVER__WORKERS: 2
+    AIRFLOW__CORE__PARALLELISM: 2
+    AIRFLOW__CORE__MAX_ACTIVE_TASKS_PER_DAG: 1
     JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
     SPARK_HOME: /home/airflow/.local/lib/python3.12/site-packages/pyspark
     PYSPARK_PYTHON: /usr/local/bin/python
@@ -16,13 +25,7 @@ x-airflow-common: &airflow-common
     _AIRFLOW_WWW_USER_CREATE: "true"
     _AIRFLOW_WWW_USER_USERNAME: admin
     _AIRFLOW_WWW_USER_PASSWORD: admin
-  volumes:
-    - ./dags:/opt/airflow/dags
-    - ./src:/opt/airflow/src
-    - ./data:/opt/airflow/data
-    - ./requirements.txt:/opt/airflow/requirements.txt
-    - ./config.py:/opt/airflow/config.py
-    - ./spark_session.py:/opt/airflow/spark_session.py
+  volumes: *app-volumes
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on: &airflow-common-depends-on
     postgres:
@@ -57,6 +60,12 @@ services:
           --role Admin \
           --email admin@example.com \
           --password admin
+        echo "=== Running Medallion Pipeline ==="
+        python src/data_generation/generate_all.py
+        python src/bronze/ingest_to_bronze.py
+        python src/silver/transform_to_silver.py
+        python src/gold/build_gold_star_schema.py
+        echo "=== Pipeline Complete ==="
     restart: "no"
 
   airflow-webserver:
@@ -80,6 +89,27 @@ services:
       timeout: 10s
       retries: 5
     restart: always
+
+  spark-thrift:
+    build:
+      context: .
+      dockerfile: Dockerfile.spark-thrift
+    ports:
+      - "10000:10000"
+    volumes:
+      - ./data:/opt/airflow/data
+    restart: unless-stopped
+
+  metabase:
+    image: metabase/metabase:latest
+    ports:
+      - "3000:3000"
+    environment:
+      JAVA_OPTS: "-Xmx2g -XX:+UseG1GC"
+    depends_on:
+      spark-thrift:
+        condition: service_started
+    restart: unless-stopped
 
 volumes:
   postgres-db-volume:

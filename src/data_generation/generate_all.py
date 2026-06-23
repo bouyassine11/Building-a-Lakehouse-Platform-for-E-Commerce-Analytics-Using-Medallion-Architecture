@@ -70,12 +70,12 @@ def generate_all() -> dict[str, Path]:
     log.info("Done in %.1fs: %s", time.time() - t0, web_events_path)
 
     return {
-        "customers": customers_path,
-        "products": products_path,
-        "orders": orders_path,
-        "payments": payments_path,
-        "deliveries": deliveries_path,
-        "web_events": web_events_path,
+        "customers": str(customers_path),
+        "products": str(products_path),
+        "orders": str(orders_path),
+        "payments": str(payments_path),
+        "deliveries": str(deliveries_path),
+        "web_events": str(web_events_path),
     }
 
 
