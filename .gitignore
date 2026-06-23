@@ -1,0 +1,41 @@
+# Data directories
+data/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+
+# Spark / Delta
+.metastore/
+metastore_db/
+derby.log/
+*.parquet/
+_spark_metadata/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+*.log
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Airflow local
+airflow.cfg
+airflow.db
+unittests.cfg
+logs/
