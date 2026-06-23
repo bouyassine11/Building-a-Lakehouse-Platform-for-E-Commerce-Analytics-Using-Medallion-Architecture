@@ -32,5 +32,6 @@ def get_spark_session(app_name: str = "LakehouseETL") -> SparkSession:
         .config("spark.sql.sources.partitionOverwriteMode", "dynamic")
         .config("spark.databricks.delta.schema.autoMerge.enabled", "true")
         .config("spark.databricks.delta.retentionDurationCheck.enabled", "false")
+        .config("spark.driver.host", "127.0.0.1")
         .getOrCreate()
     )

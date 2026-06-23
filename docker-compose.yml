@@ -11,6 +11,7 @@ x-airflow-common: &airflow-common
     JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
     SPARK_HOME: /home/airflow/.local/lib/python3.12/site-packages/pyspark
     PYSPARK_PYTHON: /usr/local/bin/python
+    PYTHONPATH: /opt/airflow
     _AIRFLOW_DB_UPGRADE: "true"
     _AIRFLOW_WWW_USER_CREATE: "true"
     _AIRFLOW_WWW_USER_USERNAME: admin
