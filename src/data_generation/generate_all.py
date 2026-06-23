@@ -36,24 +36,37 @@ def generate_all() -> dict[str, Path]:
     products_path = generate_products(SOURCE_CONFIG["products"]["row_count"])
     log.info("Done in %.1fs: %s", time.time() - t0, products_path)
 
+    log.info("Loading generated IDs for FK references...")
+    import csv
+    with open(customers_path) as f:
+        cust_ids = [r["customer_id"] for r in csv.DictReader(f)]
+    with open(products_path) as f:
+        prod_ids = [r["product_id"] for r in csv.DictReader(f)]
+    log.info("Loaded %s customer IDs, %s product IDs", len(cust_ids), len(prod_ids))
+
     log.info("Generating orders (%s rows)...", SOURCE_CONFIG["orders"]["row_count"])
     t0 = time.time()
-    orders_path = generate_orders(SOURCE_CONFIG["orders"]["row_count"])
+    orders_path = generate_orders(SOURCE_CONFIG["orders"]["row_count"], customer_ids=cust_ids, product_ids=prod_ids)
     log.info("Done in %.1fs: %s", time.time() - t0, orders_path)
+
+    log.info("Loading order IDs for payments/deliveries FK references...")
+    with open(orders_path) as f:
+        ord_ids = [r["order_id"] for r in csv.DictReader(f)]
+    log.info("Loaded %s order IDs", len(ord_ids))
 
     log.info("Generating payments (%s rows)...", SOURCE_CONFIG["payments"]["row_count"])
     t0 = time.time()
-    payments_path = generate_payments(SOURCE_CONFIG["payments"]["row_count"])
+    payments_path = generate_payments(SOURCE_CONFIG["payments"]["row_count"], order_ids=ord_ids)
     log.info("Done in %.1fs: %s", time.time() - t0, payments_path)
 
     log.info("Generating deliveries (%s rows)...", SOURCE_CONFIG["deliveries"]["row_count"])
     t0 = time.time()
-    deliveries_path = generate_deliveries(SOURCE_CONFIG["deliveries"]["row_count"])
+    deliveries_path = generate_deliveries(SOURCE_CONFIG["deliveries"]["row_count"], order_ids=ord_ids)
     log.info("Done in %.1fs: %s", time.time() - t0, deliveries_path)
 
     log.info("Generating web_events (%s rows)...", SOURCE_CONFIG["web_events"]["row_count"])
     t0 = time.time()
-    web_events_path = generate_web_events(SOURCE_CONFIG["web_events"]["row_count"])
+    web_events_path = generate_web_events(SOURCE_CONFIG["web_events"]["row_count"], product_ids=prod_ids)
     log.info("Done in %.1fs: %s", time.time() - t0, web_events_path)
 
     return {
