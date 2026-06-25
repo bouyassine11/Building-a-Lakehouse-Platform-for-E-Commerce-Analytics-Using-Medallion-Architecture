@@ -9,4 +9,7 @@ SPARK_NO_DAEMONIZE=true \
   --conf spark.driver.host=0.0.0.0 \
   --conf spark.sql.adaptive.enabled=false \
   --conf spark.sql.hive.thriftServer.singleSession=true \
+  --conf spark.sql.shuffle.partitions=4 \
+  --conf spark.sql.autoBroadcastJoinThreshold=10485760 \
+  --conf spark.driver.memory=512m \
   "$@"

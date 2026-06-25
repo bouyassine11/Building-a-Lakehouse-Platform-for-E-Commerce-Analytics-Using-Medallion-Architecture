@@ -83,5 +83,6 @@ if __name__ == "__main__":
     paths = generate_all()
     log.info("All data generated successfully:")
     for name, path in paths.items():
-        size_mb = path.stat().st_size / (1024 * 1024)
+        p = Path(path)
+        size_mb = p.stat().st_size / (1024 * 1024)
         log.info("  %s: %s (%.1f MB)", name, path, size_mb)

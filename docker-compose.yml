@@ -1,96 +1,36 @@
 x-volumes: &app-volumes
-  - ./dags:/opt/airflow/dags
   - ./src:/opt/airflow/src
   - ./data:/opt/airflow/data
-  - ./requirements.txt:/opt/airflow/requirements.txt
   - ./config.py:/opt/airflow/config.py
   - ./spark_session.py:/opt/airflow/spark_session.py
 
-x-airflow-common: &airflow-common
-  build: .
-  environment: &airflow-common-env
-    AIRFLOW__CORE__EXECUTOR: LocalExecutor
-    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
-    AIRFLOW__CORE__LOAD_EXAMPLES: "false"
-    AIRFLOW__CORE__FERNET_KEY: ""
-    AIRFLOW__LOGGING__LOGGING_LEVEL: INFO
-    AIRFLOW__WEBSERVER__WORKERS: 2
-    AIRFLOW__CORE__PARALLELISM: 2
-    AIRFLOW__CORE__MAX_ACTIVE_TASKS_PER_DAG: 1
-    JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
-    SPARK_HOME: /home/airflow/.local/lib/python3.12/site-packages/pyspark
-    PYSPARK_PYTHON: /usr/local/bin/python
-    PYTHONPATH: /opt/airflow
-    _AIRFLOW_DB_UPGRADE: "true"
-    _AIRFLOW_WWW_USER_CREATE: "true"
-    _AIRFLOW_WWW_USER_USERNAME: admin
-    _AIRFLOW_WWW_USER_PASSWORD: admin
-  volumes: *app-volumes
-  user: "${AIRFLOW_UID:-50000}:0"
-  depends_on: &airflow-common-depends-on
-    postgres:
-      condition: service_healthy
-
 services:
-  postgres:
-    image: postgres:16
-    environment:
-      POSTGRES_USER: airflow
-      POSTGRES_PASSWORD: airflow
-      POSTGRES_DB: airflow
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "airflow"]
-      interval: 5s
-      retries: 5
-    volumes:
-      - postgres-db-volume:/var/lib/postgresql/data
-    restart: always
-
-  airflow-init:
-    <<: *airflow-common
+  pipeline:
+    build:
+      context: .
+      dockerfile: Dockerfile.pipeline
     entrypoint: /bin/bash
     command:
       - -c
       - |
-        airflow db init
-        airflow users create \
-          --username admin \
-          --firstname Admin \
-          --lastname User \
-          --role Admin \
-          --email admin@example.com \
-          --password admin
-        echo "=== Running Medallion Pipeline ==="
+        echo "=== Medallion Pipeline ==="
+        echo "--- Generating data ---"
         python src/data_generation/generate_all.py
+        echo "--- Bronze ingestion ---"
         python src/bronze/ingest_to_bronze.py
+        echo "--- Silver transformation ---"
         python src/silver/transform_to_silver.py
+        echo "--- Gold star schema ---"
         python src/gold/build_gold_star_schema.py
         echo "=== Pipeline Complete ==="
+    volumes: *app-volumes
+    environment:
+      JAVA_HOME: /usr/lib/jvm/java-21-openjdk-amd64
+      PYTHONPATH: /opt/airflow
     restart: "no"
 
-  airflow-webserver:
-    <<: *airflow-common
-    command: airflow webserver
-    ports:
-      - "8080:8080"
-    healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
-      interval: 10s
-      timeout: 10s
-      retries: 5
-    restart: always
-
-  airflow-scheduler:
-    <<: *airflow-common
-    command: airflow scheduler
-    healthcheck:
-      test: ["CMD", "airflow", "jobs", "check", "--job-type", "SchedulerJob", "--hostname", "$${HOSTNAME}"]
-      interval: 10s
-      timeout: 10s
-      retries: 5
-    restart: always
-
   spark-thrift:
+    profiles: ["query"]
     build:
       context: .
       dockerfile: Dockerfile.spark-thrift
@@ -101,15 +41,12 @@ services:
     restart: unless-stopped
 
   metabase:
+    profiles: ["query"]
     image: metabase/metabase:latest
     ports:
       - "3000:3000"
     environment:
-      JAVA_OPTS: "-Xmx2g -XX:+UseG1GC"
+      JAVA_OPTS: "-Xmx256m -XX:+UseG1GC"
     depends_on:
-      spark-thrift:
-        condition: service_started
+      - spark-thrift
     restart: unless-stopped
-
-volumes:
-  postgres-db-volume:
